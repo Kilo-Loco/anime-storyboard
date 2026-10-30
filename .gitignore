@@ -1,0 +1,5 @@
+.host_key
+out/
+__pycache__/
+fonts/
+.DS_Store

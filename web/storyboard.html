@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>絵コンテ Storyboard Studio</title>
+<style>
+  :root {
+    --bg: #15161a; --bar: #1d1f25; --line: #2c2f37; --text: #e9e6df; --mute: #8d8a84;
+    --paper: #f7f4ec; --ink: #1e1e22; --faint: #9a968e; --red: #c4302b; --red-soft: #f2d9d6;
+    --jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }  /* audience mode hides host-only controls */
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--ui); }
+
+  /* ---- top bar ---- */
+  header { position: sticky; top: 0; z-index: 10; background: var(--bar); border-bottom: 1px solid var(--line); padding: 14px 24px 12px; }
+  .row1 { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .logo { font-family: var(--jp); font-weight: 800; font-size: 26px; color: var(--red); white-space: nowrap; }
+  .logo small { font-family: var(--ui); font-size: 12px; letter-spacing: .18em; color: var(--mute); margin-left: 8px; font-weight: 600; }
+  #premise { flex: 1; min-width: 200px; background: #0f1013; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 18px; }
+  #premise:focus { outline: 2px solid var(--red); border-color: transparent; }
+  select, button { font: inherit; font-size: 14px; border-radius: 8px; border: 1px solid var(--line); background: #0f1013; color: var(--text); padding: 11px 10px; }
+  button.go { background: var(--red); border-color: var(--red); font-weight: 700; padding: 11px 18px; cursor: pointer; white-space: nowrap; }
+  button.go:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: transparent; cursor: pointer; }
+  .toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); white-space: nowrap; cursor: pointer; }
+  .vs { color: var(--mute); font-size: 12px; font-weight: 700; }
+  .row2 { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .chip { font-size: 12px; color: var(--mute); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; cursor: pointer; background: none; }
+  .chip:hover { color: var(--text); border-color: var(--mute); }
+  #clock { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--mute); }
+  #clock b { color: var(--text); font-size: 18px; }
+
+  /* ---- boards ---- */
+  main { display: grid; gap: 28px; padding: 28px 24px 80px; max-width: 1500px; margin: 0 auto; }
+  main.compare { grid-template-columns: 1fr 1fr; max-width: 1900px; }
+  .empty { text-align: center; color: var(--mute); padding: 120px 20px; font-size: 15px; }
+  .empty .big { font-family: var(--jp); font-size: 64px; color: #2a2c33; font-weight: 800; margin-bottom: 8px; }
+
+  .sheet { background: var(--paper); color: var(--ink); border-radius: 4px; padding: 26px 28px 30px; box-shadow: 0 20px 60px rgba(0,0,0,.45); min-width: 0; }
+  .head { display: flex; gap: 18px; align-items: flex-start; }
+  .kanji { font-family: var(--jp); font-weight: 800; color: var(--red); font-size: 36px; line-height: 1; white-space: nowrap; }
+  .head h2 { margin: 0; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; }
+  .head .logline { margin: 6px 0 0; color: var(--faint); font-size: 14px; }
+  .meta { margin: 14px 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em; display: flex; gap: 14px; flex-wrap: wrap; }
+  .meta .pace { background: var(--ink); color: var(--paper); padding: 2px 8px; border-radius: 3px; }
+
+  /* pacing timeline: one segment per cut, width = seconds */
+  .timeline { display: flex; height: 34px; gap: 2px; margin-bottom: 18px; }
+  .seg { position: relative; min-width: 6px; background: #ddd8cc; border-radius: 2px; overflow: hidden; transition: background .3s; }
+  .seg span { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--faint); }
+  .seg .fill { position: absolute; inset: 0; width: 0; background: var(--red); transition: width .25s; }
+  .seg.done { background: var(--ink); }
+  .seg.done .fill { width: 0 !important; }
+  .seg.done span { color: var(--paper); }
+  .seg.active span { color: var(--ink); z-index: 1; }
+  .timeline-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin: -14px 0 16px; }
+
+  .table { border: 2px solid var(--ink); }
+  .thead, .cut { display: grid; grid-template-columns: 58px minmax(0, 1.55fr) minmax(0, 1fr) minmax(0, .7fr) 74px; }
+  .thead { background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-align: center; }
+  .thead div { padding: 8px 4px; }
+  .cut { border-top: 1.5px solid var(--ink); min-height: 120px; }
+  .cut > div { border-left: 1.5px solid var(--ink); padding: 10px 12px; min-width: 0; }
+  .cut > div:first-child { border-left: none; }
+  .num { font-size: 30px; font-weight: 800; text-align: center; }
+  .notes .cam { color: var(--red); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; }
+  .notes .move { color: var(--faint); font-size: 12px; margin-top: 2px; }
+  .notes .act { font-size: 14px; margin-top: 8px; line-height: 1.35; }
+  .dlg { font-size: 14px; line-height: 1.35; }
+  .sfx { color: var(--faint); font-size: 12px; margin-top: 6px; }
+  .dlg-inline { display: none; }
+  .time { text-align: center; }
+  .time b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .time small { color: var(--faint); font-variant-numeric: tabular-nums; }
+
+  .frame { position: relative; aspect-ratio: 16 / 9; border: 2.5px solid var(--ink); background: #ebe6da; overflow: hidden; }
+  .frame .ghost { position: absolute; inset: 0; display: grid; place-items: center; color: #b9b3a6; font-weight: 800; font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+                  background: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(0,0,0,.025) 10px 20px); }
+  .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .frame img.preview { filter: grayscale(.6) contrast(1.1) blur(.6px); }
+  .frame img.final { animation: land .55s cubic-bezier(.2,.9,.3,1.2); }
+  .frame .bar { position: absolute; left: 0; bottom: 0; height: 5px; width: 0; background: var(--red); transition: width .2s; }
+  .frame .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .frame.landed .flash { animation: flash .5s ease-out; }
+  .cut.rendering { background: var(--red-soft); }
+  @keyframes land { from { transform: scale(1.06); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+  @keyframes flash { from { opacity: .8; } to { opacity: 0; } }
+
+  .planning { padding: 70px 10px; text-align: center; color: var(--faint); }
+  .planning .spinner { width: 34px; height: 34px; border: 3px solid #ddd8cc; border-top-color: var(--red); border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }
+  .planning .msg { font-size: 16px; color: var(--ink); }
+  .planning .sub { font-size: 12px; margin-top: 6px; }
+  .planning.error .msg { color: var(--red); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* compare mode: two narrower sheets, dialogue folds into the action column */
+  main.compare .thead, main.compare .cut { grid-template-columns: 44px minmax(0, 1.5fr) minmax(0, 1fr) 62px; }
+  main.compare .thead .h-dlg, main.compare .cut .dlg-col { display: none; }
+  main.compare .dlg-inline { display: block; margin-top: 8px; }
+  main.compare .num { font-size: 22px; }
+  main.compare .head h2 { font-size: 20px; }
+
+  footer { position: fixed; bottom: 0; left: 0; right: 0; display: flex; gap: 10px; justify-content: center; padding: 10px; background: linear-gradient(transparent, var(--bg) 40%); font-size: 12px; color: var(--mute); pointer-events: none; }
+  footer span { border: 1px solid var(--line); background: var(--bar); border-radius: 99px; padding: 4px 12px; }
+  footer b { color: var(--text); }
+
+  /* phones: stacked header, one card per cut */
+  @media (max-width: 720px) {
+    header { padding: 10px 12px; }
+    .row1 { gap: 8px; }
+    .logo { font-size: 20px; }
+    .logo small { display: none; }
+    #premise { flex-basis: 100%; order: 2; font-size: 16px; }
+    #pacingA { order: 3; flex: 1; }
+    button.go { order: 4; flex: 1; }
+    #reroll { order: 5; }
+    .row2 { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+    .chip, #clock { white-space: nowrap; }
+    main { padding: 12px 10px 40px; }
+    .sheet { padding: 16px 14px 18px; }
+    .kanji { font-size: 22px; }
+    .head h2 { font-size: 18px; }
+    .meta { gap: 8px; }
+    .thead { display: none; }
+    .table { border-width: 1.5px; }
+    .cut { grid-template-columns: 34px minmax(0, 1fr); min-height: 0; }
+    .cut > div { border-left: none; padding: 8px 8px 8px 0; }
+    .cut > .num { grid-row: 1 / span 3; font-size: 20px; padding: 10px 0 0; }
+    .cut > .dlg-col { display: none; }
+    .dlg-inline { display: block; margin-top: 6px; }
+    .cut > .time { text-align: left; display: flex; gap: 8px; align-items: baseline; padding-top: 0; }
+    .time b { font-size: 15px; display: inline; }
+    footer { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="row1">
+    <div class="logo">絵コンテ<small>STORYBOARD STUDIO</small></div>
+    <input id="premise" placeholder="One line. Anything. e.g. two rivals meet again at a train station in the rain" autocomplete="off">
+    <select id="pacingA" title="Pacing"></select>
+    <label class="toggle"><input type="checkbox" id="compare"> compare</label>
+    <span class="vs" id="vs" hidden>VS</span>
+    <select id="pacingB" title="Second pacing" hidden></select>
+    <select id="length" title="How many cuts"></select>
+    <select id="llm" title="Planner LLM"></select>
+    <button class="go" id="go">Storyboard it</button>
+    <button class="ghost" id="reroll" title="Same premise, new take" disabled>↻ New take</button>
+  </div>
+  <div class="row2" id="chips">
+    <div id="clock"></div>
+  </div>
+</header>
+
+<main id="boards">
+  <div class="empty"><div class="big">絵コンテ</div>Type a premise. Get a timed anime storyboard, planned and drawn live on one GPU.</div>
+</main>
+
+<footer>
+  <span>Planner <b id="f-llm">–</b> via Ollama</span>
+  <span>Panels <b>Anima Turbo</b> · CircleStone Labs × Comfy Org</span>
+  <span>Running on <b>Runpod</b></span>
+</footer>
+
+<script>
+const PANEL_SEED = 424242;
+const SUGGESTIONS = [
+  "two rivals meet again at a train station in the rain",
+  "a girl finds a stray cat on the school roof",
+  "the vending machine at school is haunted",
+  "final serve of the volleyball championship",
+  "a letter arrives ten years too late",
+];
+const PLANNING_LINES = ["Reading the premise", "Casting the characters", "Blocking the scene", "Choosing camera angles", "Timing the cuts"];
+
+const $ = (s, el = document) => el.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+// Plain seconds for the audience, e.g. 2s, 0.5s, 12.5s.
+const secs = s => `${+s.toFixed(1)}s`;
+
+// ---------------- ComfyUI client ----------------
+// Each board runs on whichever pod /storyboard/assign picks; `base` is that pod's origin ("" = this pod).
+// Progress and previews for this browser arrive over that pod's websocket.
+const clientId = crypto.randomUUID();
+const jobs = new Map();       // prompt_id -> {base, onProgress, onPreview, resolve, reject}
+const early = new Map();      // events for prompt ids we have not registered yet
+const sockets = new Map();    // base -> WebSocket
+
+function connect(base) {
+  if (sockets.has(base)) return;
+  const origin = base ? new URL(base) : location;
+  const ws = new WebSocket(`${origin.protocol === "https:" ? "wss" : "ws"}://${origin.host}/ws?clientId=${clientId}`);
+  ws.binaryType = "arraybuffer";
+  let executing = null;  // previews carry no prompt id, so they belong to whatever this pod last reported
+  ws.onmessage = ev => {
+    if (typeof ev.data !== "string") return onBinary(ev.data, executing);
+    const { type, data } = JSON.parse(ev.data);
+    if (data && (type === "executing" || type === "progress")) executing = data.prompt_id;
+    onJson(type, data);
+  };
+  ws.onclose = () => { sockets.delete(base); setTimeout(() => connect(base), 1000); };
+  sockets.set(base, ws);
+}
+
+function onBinary(buf, executing) {
+  const view = new DataView(buf);
+  const type = view.getUint32(0);
+  let pid = executing, img;
+  if (type === 1) img = buf.slice(8);                       // PREVIEW_IMAGE: [type][format][bytes]
+  else if (type === 4) {                                      // PREVIEW_IMAGE_WITH_METADATA
+    const n = view.getUint32(4);
+    const meta = JSON.parse(new TextDecoder().decode(buf.slice(8, 8 + n)));
+    pid = meta.prompt_id || pid; img = buf.slice(8 + n);
+  } else return;
+  const job = jobs.get(pid);
+  if (job?.onPreview) job.onPreview(URL.createObjectURL(new Blob([img], { type: "image/jpeg" })));
+}
+
+function onJson(type, data) {
+  if (!data) return;
+  const pid = data.prompt_id;
+  if (type === "executing" && data.node === null) finish(pid);
+  else if (type === "execution_success") finish(pid);
+  else if (type === "progress") jobs.get(pid)?.onProgress?.(data.value / data.max);
+  else if (type === "execution_error") fail(pid, data.exception_message || "execution error");
+}
+
+async function finish(pid) {
+  const job = jobs.get(pid);
+  if (!job) { early.set(pid, { ok: true }); return; }
+  if (job.settled) return;
+  job.settled = true;
+  const hist = await (await fetch(`${job.base}/history/${pid}`)).json();
+  jobs.delete(pid);
+  const status = hist[pid]?.status;
+  if (status?.status_str === "error") {
+    const err = status.messages?.find(m => m[0] === "execution_error");
+    job.reject(new Error(err?.[1]?.exception_message || "execution error"));
+  } else job.resolve(hist[pid]?.outputs || {});
+}
+
+function fail(pid, msg) {
+  const job = jobs.get(pid);
+  if (!job) { early.set(pid, { ok: false, msg }); return; }
+  if (job.settled) return;
+  job.settled = true; jobs.delete(pid); job.reject(new Error(msg));
+}
+
+async function api(base, path, body) {
+  const res = await fetch(base + path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const out = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+  if (!res.ok || out.error) throw new Error(out.error || `HTTP ${res.status}`);
+  return out;
+}
+
+// The pod builds the graph from its own stored prompt; the browser only names the board and cut.
+async function renderPrompt(base, board_id, cut, seed, handlers) {
+  const { prompt_id: pid } = await api(base, "/storyboard/render", { board_id, cut, seed, client_id: clientId });
+  return new Promise((resolve, reject) => {
+    jobs.set(pid, { ...handlers, base, resolve, reject });
+    const e = early.get(pid);
+    if (e) { early.delete(pid); e.ok ? finish(pid) : fail(pid, e.msg); }
+  });
+}
+
+// Plans run as jobs on the pod (they can wait in line longer than the proxy holds a request open),
+// so start one and poll it, showing the line position on the sheet meanwhile.
+async function planOnPod(base, body, sheet) {
+  let job = await api(base, "/storyboard/plan", body);
+  const id = job.job_id;
+  while (true) {
+    const sub = $(".sub", sheet);
+    if (sub && job.position) sub.textContent = job.position > 1 ? `You're #${job.position} in line` : "You're next";
+    if (sub && job.status === "planning") sub.textContent = "Planning your scene";
+    await new Promise(r => setTimeout(r, 1000));
+    job = await api(base, `/storyboard/plan/${id}`);
+    if (job.status === "done") return job;
+    if (job.status === "error") throw new Error(job.error);
+  }
+}
+
+// webp preview keeps each panel ~100KB instead of a ~1.5MB PNG through the pod proxy.
+const viewUrl = (base, img) => `${base}/view?${new URLSearchParams({ filename: img.filename, subfolder: img.subfolder, type: img.type, preview: "webp;85" })}`;
+
+// ---------------- sheet rendering ----------------
+function makeSheet(pacing, llm) {
+  const sheet = el("section", "sheet");
+  const head = el("div", "head");
+  head.append(el("div", "kanji", "絵コンテ"));
+  const titles = el("div");
+  titles.append(el("h2", null, pacing === "auto" ? "Planning…" : `${pacing} cut`), el("p", "logline", ""));
+  head.append(titles);
+  sheet.append(head);
+  const planning = el("div", "planning");
+  planning.append(el("div", "spinner"), el("div", "msg", PLANNING_LINES[0] + "…"), el("div", "sub", `${llm} · pacing: ${pacing}`));
+  sheet.append(planning);
+  let i = 0;
+  sheet._ticker = setInterval(() => { $(".msg", planning).textContent = PLANNING_LINES[++i % PLANNING_LINES.length] + "…"; }, 2200);
+  return sheet;
+}
+
+function fillSheet(sheet, plan) {
+  clearInterval(sheet._ticker);
+  $(".planning", sheet).remove();
+  $("h2", sheet).textContent = plan.title;
+  $(".logline", sheet).textContent = plan.logline;
+  const total = plan.shots.reduce((a, s) => a + s.seconds, 0);
+
+  const meta = el("div", "meta");
+  meta.append(el("span", "pace", `PACING: ${plan.pacing.toUpperCase()}`), el("span", null, `${plan.shots.length} CUTS`),
+              el("span", null, `${secs(total)} SCENE`),
+              el("span", null, plan.characters.map(c => c.name).join(" · ")));
+  sheet.append(meta);
+
+  const timeline = el("div", "timeline");
+  const segs = plan.shots.map(s => {
+    const seg = el("div", "seg");
+    seg.style.flexGrow = s.seconds;
+    seg.title = `Cut ${s.cut}: ${s.shot_size}, ${s.seconds}s`;
+    seg.append(el("div", "fill"), el("span", null, s.cut));
+    timeline.append(seg);
+    return seg;
+  });
+  const tl = el("div", "timeline-label");
+  tl.append(el("span", null, "0s"), el("span", null, `${total.toFixed(1)}s`));
+  sheet.append(timeline, tl);
+
+  const table = el("div", "table");
+  const thead = el("div", "thead");
+  for (const [label, cls] of [["CUT"], ["PICTURE"], ["ACTION"], ["DIALOGUE", "h-dlg"], ["LENGTH"]]) thead.append(el("div", cls, label));
+  table.append(thead);
+
+  let elapsed = 0;
+  const rows = plan.shots.map(s => {
+    elapsed += s.seconds;
+    const row = el("div", "cut");
+    row.append(el("div", "num", s.cut));
+
+    const pic = el("div");
+    const frame = el("div", "frame");
+    frame.append(el("div", "ghost", s.shot_size), el("div", "bar"), el("div", "flash"));
+    pic.append(frame);
+    row.append(pic);
+
+    const notes = el("div", "notes");
+    notes.append(el("div", "cam", `${s.shot_size} · ${s.angle}`));
+    if (s.camera_move && s.camera_move.toLowerCase() !== "static") notes.append(el("div", "move", `cam: ${s.camera_move}`));
+    notes.append(el("div", "act", s.action));
+    const inline = el("div", "dlg-inline");
+    if (s.dialogue) inline.append(el("div", "dlg", s.dialogue));
+    if (s.sfx) inline.append(el("div", "sfx", `SFX: ${s.sfx}`));
+    notes.append(inline);
+    row.append(notes);
+
+    const dlg = el("div", "dlg-col");
+    if (s.dialogue) dlg.append(el("div", "dlg", s.dialogue));
+    if (s.sfx) dlg.append(el("div", "sfx", `SFX: ${s.sfx}`));
+    row.append(dlg);
+
+    const time = el("div", "time");
+    // Cut length, then where the cut sits in the scene.
+    time.title = `Cut ${s.cut} lasts ${secs(s.seconds)}, from ${secs(elapsed - s.seconds)} to ${secs(elapsed)} of the scene`;
+    time.append(el("b", null, secs(s.seconds)), el("small", null, `${+(elapsed - s.seconds).toFixed(1)}–${secs(elapsed)}`));
+    row.append(time);
+    table.append(row);
+    return row;
+  });
+  sheet.append(table);
+  return { rows, segs };
+}
+
+function planningError(sheet, msg) {
+  clearInterval(sheet._ticker);
+  const p = $(".planning", sheet);
+  if (!p) return;
+  p.classList.add("error");
+  $(".spinner", p)?.remove();
+  $(".msg", p).textContent = "Planning failed";
+  $(".sub", p).textContent = msg;
+}
+
+// ---------------- run ----------------
+let running = false, clockTimer = null, lastReroll = 0;
+
+function startClock() {
+  const t0 = performance.now();
+  const clock = $("#clock");
+  const marks = [];
+  clockTimer = setInterval(() => { clock.innerHTML = `<b>${((performance.now() - t0) / 1000).toFixed(1)}s</b>`; }, 100);
+  return {
+    mark(label) { marks.push(`${label} ${((performance.now() - t0) / 1000).toFixed(1)}s`); },
+    stop() { clearInterval(clockTimer); clock.innerHTML = `<b>${((performance.now() - t0) / 1000).toFixed(1)}s</b> &nbsp;${marks.join(" · ")}`; },
+  };
+}
+
+async function run(reroll) {
+  if (running) return;
+  const premise = $("#premise").value.trim() || $("#premise").placeholder.replace(/^.*e\.g\. /, "");
+  $("#premise").value = premise;
+  const compare = $("#compare").checked;
+  const pacings = compare ? [$("#pacingA").value, $("#pacingB").value] : [$("#pacingA").value];
+  const llm = $("#llm").value;
+  lastReroll = reroll;
+  running = true; $("#go").disabled = true; $("#reroll").disabled = true;
+
+  const boards = $("#boards");
+  boards.className = compare ? "compare" : "";
+  boards.replaceChildren();
+  const sheets = pacings.map(p => { const s = makeSheet(p, llm); boards.append(s); return s; });
+  const clock = startClock();
+
+  let panels = 0;
+  try {
+    const { base, est_wait } = await api("", "/storyboard/assign");
+    connect(base);
+    if (est_wait > 8) sheets.forEach(s => { $(".sub", s).textContent = `You're in line · about ${est_wait}s before your board starts`; });
+    // Ollama serves this MoE one request at a time, so plans land one after another. Each sheet
+    // queues its cuts the moment its own plan arrives, so the first board draws while the next one plans.
+    await Promise.all(pacings.map((pacing, i) =>
+      planOnPod(base, { premise, pacing, llm, reroll, length: $("#length").value }, sheets[i])
+        .then(out => {
+          clock.mark(`plan ${i + 1}`);
+          const p = { base, board: out.board_id, ui: fillSheet(sheets[i], out.plan) };
+          panels += out.plan.shots.length;
+          return Promise.allSettled(out.plan.shots.map((_, c) => renderCut(p, c, PANEL_SEED + reroll)));
+        })
+        .catch(err => planningError(sheets[i], err.message))
+    ));
+  } catch (err) {
+    sheets.forEach(s => planningError(s, err.message));
+  }
+  clock.mark(`${panels} panels`);
+  clock.stop();
+  running = false; $("#go").disabled = false; $("#reroll").disabled = false;
+}
+
+function renderCut(p, c, seed) {
+  const row = p.ui.rows[c], seg = p.ui.segs[c];
+  const frame = $(".frame", row), bar = $(".bar", frame);
+  let started = false;
+  const start = () => {
+    if (started) return; started = true;
+    row.classList.add("rendering"); seg.classList.add("active");
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  return renderPrompt(p.base, p.board, c, seed, {
+    onProgress(f) { start(); bar.style.width = `${f * 100}%`; $(".fill", seg).style.width = `${f * 100}%`; },
+    onPreview(url) {
+      start();
+      let img = $("img.preview", frame);
+      if (!img) { img = el("img", "preview"); frame.insertBefore(img, bar); }
+      const old = img.src; img.src = url; if (old) URL.revokeObjectURL(old);
+    },
+  }).then(out => {
+    const final = el("img", "final");
+    final.src = viewUrl(p.base, out.save.images[0]);
+    final.onload = () => {
+      $("img.preview", frame)?.remove();
+      $(".ghost", frame)?.remove();
+      bar.remove();
+      frame.classList.add("landed");
+      row.classList.remove("rendering"); seg.classList.remove("active"); seg.classList.add("done");
+    };
+    frame.insertBefore(final, $(".flash", frame));
+  }).catch(err => {
+    row.classList.remove("rendering");
+    $(".ghost", frame).textContent = "render failed";
+    console.error(err);
+  });
+}
+
+// ---------------- controls ----------------
+async function init() {
+  const cfg = await api("", "/storyboard/config");
+  const fill = (sel, opts, value) => { sel.replaceChildren(...opts.map(o => { const op = el("option", null, o); op.value = o; return op; })); if (value) sel.value = value; };
+  fill($("#pacingA"), cfg.pacing, "auto");
+  fill($("#pacingB"), cfg.pacing.filter(p => p !== "auto"), "romance");
+  fill($("#llm"), cfg.llm, cfg.llm[0]);
+  fill($("#length"), cfg.length, "standard");
+  [...$("#length").options].forEach(o => { o.textContent = `${o.value} cut`; });
+  $("#f-llm").textContent = $("#llm").value;
+  $("#llm").onchange = () => { $("#f-llm").textContent = $("#llm").value; };
+  if (!cfg.host) {
+    // Audience mode: one pacing dropdown; the pod forces short boards so everyone gets a turn quickly.
+    for (const id of ["#compare", "#length", "#llm"]) ($(id).closest("label") || $(id)).hidden = true;
+    $("#length").value = "short";
+    $(".empty").lastChild.textContent = "Type a premise. Get a timed anime storyboard, planned and drawn live on Runpod GPUs.";
+  }
+
+  $("#compare").onchange = () => {
+    const on = $("#compare").checked;
+    $("#pacingB").hidden = $("#vs").hidden = !on;
+    if (on && $("#pacingA").value === "auto") $("#pacingA").value = "action";
+  };
+  const chips = $("#chips");
+  for (const s of SUGGESTIONS) {
+    const b = el("button", "chip", s);
+    b.onclick = () => { $("#premise").value = s; $("#premise").focus(); };
+    chips.insertBefore(b, $("#clock"));
+  }
+  $("#go").onclick = () => run(0);
+  $("#reroll").onclick = () => run(lastReroll + 1 + Math.floor(Math.random() * 1000));
+  $("#premise").addEventListener("keydown", e => { if (e.key === "Enter") run(0); });
+}
+init();
+</script>
+</body>
+</html>

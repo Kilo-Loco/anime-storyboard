@@ -1,0 +1,134 @@
+{
+ "title": "Rain Platform",
+ "logline": "Three years after she left without a word, Aoi steps off the last train to settle things with Ren.",
+ "pacing": "action",
+ "setting": "Empty rural Japanese train station platform at night, heavy rain, flickering lamppost, cold blue and sodium-orange palette",
+ "characters": [
+  {
+   "name": "Ren",
+   "tag": "the black-haired boy in the red scarf",
+   "look": "teenage boy, black spiky hair, red eyes, scar over his left eyebrow, black gakuran school uniform, long red scarf"
+  },
+  {
+   "name": "Aoi",
+   "tag": "the silver-haired swordswoman in white",
+   "look": "teenage girl, long silver hair in a high ponytail, blue eyes, white long coat over black clothes, katana in a black sheath at her hip"
+  }
+ ],
+ "props": [],
+ "shots": [
+  {
+   "cut": 1,
+   "shot_size": "extreme wide",
+   "angle": "high angle",
+   "camera_move": "static",
+   "characters": [],
+   "composition": "An empty station platform seen from above in pouring rain, a single lamppost flickering, puddles reflecting orange light, no people",
+   "action": "Rain hammers an empty platform. The lamp flickers.",
+   "dialogue": "",
+   "sfx": "rain, distant train horn",
+   "seconds": 2.5
+  },
+  {
+   "cut": 2,
+   "shot_size": "full",
+   "angle": "low angle",
+   "camera_move": "slow push-in",
+   "characters": [
+    "Ren"
+   ],
+   "composition": "Ren standing alone under the lamppost, hands in pockets, scarf whipping in the wind, rain streaking past",
+   "action": "Ren waits, not moving.",
+   "dialogue": "",
+   "sfx": "",
+   "seconds": 2.0
+  },
+  {
+   "cut": 3,
+   "shot_size": "wide",
+   "angle": "eye level",
+   "camera_move": "static",
+   "characters": [
+    "Aoi"
+   ],
+   "composition": "Aoi stepping off a train onto the platform, backlit by the train's headlights, coat flowing, steam rising",
+   "action": "The train doors open. Aoi steps out.",
+   "dialogue": "",
+   "sfx": "doors hiss",
+   "seconds": 2.0
+  },
+  {
+   "cut": 4,
+   "shot_size": "extreme close-up",
+   "angle": "eye level",
+   "camera_move": "static",
+   "characters": [
+    "Ren"
+   ],
+   "composition": "Extreme close-up of Ren's red eyes narrowing, rain running down his face, intense glare",
+   "action": "Ren recognises her.",
+   "dialogue": "REN: You came back.",
+   "sfx": "",
+   "seconds": 1.5
+  },
+  {
+   "cut": 5,
+   "shot_size": "medium",
+   "angle": "over the shoulder of Ren",
+   "camera_move": "static",
+   "characters": [
+    "Ren",
+    "Aoi"
+   ],
+   "composition": "Over-the-shoulder from behind Ren, his red scarf in the foreground, Aoi far away at the other end of the platform facing him",
+   "action": "They face each other across the platform.",
+   "dialogue": "AOI: Only to finish it.",
+   "sfx": "",
+   "seconds": 2.0
+  },
+  {
+   "cut": 6,
+   "shot_size": "insert",
+   "angle": "eye level",
+   "camera_move": "static",
+   "characters": [
+    "Aoi"
+   ],
+   "composition": "Insert of Aoi's hand gripping the katana hilt, thumb pushing the guard, raindrops bouncing off the steel",
+   "action": "Aoi thumbs her blade loose.",
+   "dialogue": "",
+   "sfx": "click",
+   "seconds": 1.0
+  },
+  {
+   "cut": 7,
+   "shot_size": "wide",
+   "angle": "Dutch angle",
+   "camera_move": "whip pan",
+   "characters": [
+    "Ren",
+    "Aoi"
+   ],
+   "composition": "Ren and Aoi charging at each other across the platform, water exploding from their steps, speed lines, motion blur",
+   "action": "Both charge.",
+   "dialogue": "",
+   "sfx": "splash",
+   "seconds": 0.75
+  },
+  {
+   "cut": 8,
+   "shot_size": "medium",
+   "angle": "low angle",
+   "camera_move": "static",
+   "characters": [
+    "Ren",
+    "Aoi"
+   ],
+   "composition": "Impact frame seen in profile: Aoi's katana striking Ren's raised steel forearm guard between them, a burst of white sparks, rain frozen mid-air, high contrast",
+   "action": "Impact. Everything freezes.",
+   "dialogue": "",
+   "sfx": "CLANG",
+   "seconds": 0.5
+  }
+ ]
+}

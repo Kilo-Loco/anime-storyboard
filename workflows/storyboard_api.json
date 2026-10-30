@@ -1,0 +1,16 @@
+{
+  "planner": {"class_type": "AnimeStoryboardPlanner", "_meta": {"title": "Storyboard Planner (Ollama)"},
+    "inputs": {"premise": "two rivals meet again at a train station in the rain", "pacing": "auto", "length": "standard", "shots": 0, "llm": "qwen3.6:35b", "reroll": 0, "plan_override": ""}},
+  "unet": {"class_type": "UNETLoader", "inputs": {"unet_name": "anima-turbo-v1.1.safetensors", "weight_dtype": "default"}},
+  "clip": {"class_type": "CLIPLoader", "inputs": {"clip_name": "qwen_3_06b_base.safetensors", "type": "stable_diffusion", "device": "default"}},
+  "vae": {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_vae.safetensors"}},
+  "pos": {"class_type": "CLIPTextEncode", "_meta": {"title": "Panel prompt (runs once per cut)"}, "inputs": {"text": ["planner", 1], "clip": ["clip", 0]}},
+  "neg": {"class_type": "CLIPTextEncode", "inputs": {"text": ["planner", 2], "clip": ["clip", 0]}},
+  "latent": {"class_type": "EmptyLatentImage", "inputs": {"width": 1344, "height": 768, "batch_size": 1}},
+  "sampler": {"class_type": "KSampler", "inputs": {"model": ["unet", 0], "positive": ["pos", 0], "negative": ["neg", 0], "latent_image": ["latent", 0],
+    "seed": 424242, "steps": 8, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "denoise": 1.0}},
+  "decode": {"class_type": "VAEDecode", "inputs": {"samples": ["sampler", 0], "vae": ["vae", 0]}},
+  "save_panels": {"class_type": "SaveImage", "inputs": {"images": ["decode", 0], "filename_prefix": "storyboard/panel"}},
+  "sheet": {"class_type": "AnimeStoryboardSheet", "inputs": {"panels": ["decode", 0], "plan_json": ["planner", 0], "cuts_per_page": 5}},
+  "save_sheet": {"class_type": "SaveImage", "inputs": {"images": ["sheet", 0], "filename_prefix": "storyboard/sheet"}}
+}

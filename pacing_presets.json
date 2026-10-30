@@ -1,0 +1,130 @@
+{
+  "action": {
+    "label": "Action / Shonen",
+    "shots": [
+      12,
+      18
+    ],
+    "seconds": [
+      0.5,
+      2.5
+    ],
+    "rhythm": "Fast cutting that accelerates into the hit. Brief stillness right before impact, then a burst of very short cuts.",
+    "vocabulary": [
+      "low-angle power shot",
+      "eye close-up before the strike",
+      "impact frame",
+      "speed lines",
+      "Dutch angle",
+      "smear/blur on fast motion",
+      "insert of a weapon or fist",
+      "wide shot showing the clash"
+    ],
+    "guidance": "Open on one establishing shot, then tighten. Use at least one extreme close-up on eyes and one impact frame. The clash should be the shortest cut."
+  },
+  "romance": {
+    "label": "Romance / Slice of life",
+    "shots": [
+      8,
+      12
+    ],
+    "seconds": [
+      3.0,
+      7.0
+    ],
+    "rhythm": "Slow, lingering holds. Let silence breathe. Cut on glances, not on action.",
+    "vocabulary": [
+      "pillow shot (sky, power lines, petals, train wires)",
+      "hands close-up",
+      "wide two-shot with negative space",
+      "over-the-shoulder",
+      "soft backlight / lens flare",
+      "reaction shot"
+    ],
+    "guidance": "Start or end on a pillow shot of the environment. Keep characters physically apart in the frame until the emotional beat, then bring them together."
+  },
+  "horror": {
+    "label": "Horror / Suspense",
+    "shots": [
+      10,
+      14
+    ],
+    "seconds": [
+      2.0,
+      6.0
+    ],
+    "rhythm": "Slow build with long static holds, then one abrupt short cut for the scare, then a held aftermath.",
+    "vocabulary": [
+      "long empty corridor",
+      "Dutch angle",
+      "partial reveal at frame edge",
+      "extreme close-up of a frozen face",
+      "high-angle looking down on the victim",
+      "darkness with a single light source"
+    ],
+    "guidance": "Show the space before the threat. Keep the threat partially hidden. The scare shot should be the shortest cut, followed by a long held reaction."
+  },
+  "comedy": {
+    "label": "Comedy",
+    "shots": [
+      8,
+      12
+    ],
+    "seconds": [
+      1.0,
+      4.0
+    ],
+    "rhythm": "Setup, beat, punchline. A deadpan hold before the punchline, then a smash cut.",
+    "vocabulary": [
+      "chibi / super-deformed reaction",
+      "deadpan straight-on medium shot",
+      "smash cut",
+      "sweat drop",
+      "exaggerated wide reaction shot",
+      "background characters frozen"
+    ],
+    "guidance": "Establish normal first. Hold a deadpan beat (2-3s) right before the punchline. The punchline is a chibi or exaggerated reaction shot."
+  },
+  "mystery": {
+    "label": "Mystery / Drama",
+    "shots": [
+      10,
+      14
+    ],
+    "seconds": [
+      2.0,
+      5.0
+    ],
+    "rhythm": "Measured and deliberate. Cut to clues and to faces reading them.",
+    "vocabulary": [
+      "over-the-shoulder",
+      "insert shot of a clue",
+      "slow push-in on a face",
+      "silhouette against a window",
+      "shallow depth of field",
+      "reflection shot"
+    ],
+    "guidance": "Every clue gets its own insert shot. Follow each insert with a reaction close-up. End on an unresolved image."
+  },
+  "sports": {
+    "label": "Sports / Climax",
+    "shots": [
+      12,
+      16
+    ],
+    "seconds": [
+      0.5,
+      3.0
+    ],
+    "rhythm": "Accelerating toward the decisive moment, which is frozen and held.",
+    "vocabulary": [
+      "split-screen faces",
+      "frozen mid-air hero shot",
+      "crowd reaction",
+      "scoreboard insert",
+      "sweat and breath close-up",
+      "low-angle full body"
+    ],
+    "guidance": "Intercut the competitors' faces. The decisive moment is a frozen mid-air or mid-swing shot held longer than its neighbours, followed by a crowd or teammate reaction."
+  }
+}

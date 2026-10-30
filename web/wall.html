@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>絵コンテ Storyboard Wall</title>
+<style>
+  :root {
+    --bg: #15161a; --card: #f7f4ec; --ink: #1e1e22; --faint: #9a968e; --mute: #8d8a84; --text: #e9e6df; --red: #c4302b; --line: #2c2f37;
+    --jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+         display: grid; grid-template-columns: minmax(360px, 30vw) 1fr; overflow: hidden; }
+
+  aside { padding: 4vh 2.5vw; display: flex; flex-direction: column; gap: 2.2vh; border-right: 1px solid var(--line); }
+  .logo { font-family: var(--jp); font-weight: 800; color: var(--red); font-size: clamp(40px, 5vw, 84px); line-height: 1; }
+  .sub { letter-spacing: .25em; font-size: clamp(12px, .9vw, 16px); color: var(--mute); font-weight: 700; }
+  .cta { font-size: clamp(22px, 2vw, 34px); font-weight: 800; line-height: 1.15; }
+  .qr { background: #fff; border-radius: 18px; padding: 1.4vw; width: 100%; aspect-ratio: 1; }
+  .qr img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .url { font-family: ui-monospace, monospace; font-size: clamp(11px, .8vw, 15px); color: var(--mute); word-break: break-all; }
+  .stats { display: flex; gap: 2vw; margin-top: auto; }
+  .stats div { font-size: 13px; color: var(--mute); }
+  .stats b { display: block; font-size: clamp(28px, 2.6vw, 46px); color: var(--text); font-variant-numeric: tabular-nums; }
+  .badges { font-size: 12px; color: var(--mute); line-height: 1.6; }
+  .badges b { color: var(--text); }
+
+  main { padding: 3vh 2vw; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; gap: 1.6vw; align-content: start; }
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--mute); padding-top: 30vh; font-size: 22px; }
+  .board { background: var(--card); color: var(--ink); border-radius: 6px; padding: 14px 16px 16px; position: relative; animation: arrive .6s cubic-bezier(.2,.9,.3,1.15); }
+  .board .top { display: flex; align-items: baseline; gap: 10px; }
+  .board h3 { margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: .02em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .board .pace { background: var(--ink); color: var(--card); font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 3px; letter-spacing: .06em; }
+  .board .premise { color: var(--faint); font-size: 13px; margin: 4px 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .cell { aspect-ratio: 16 / 9; background: repeating-linear-gradient(-45deg, #e6e0d3 0 8px, #ece7dc 8px 16px); border: 1.5px solid var(--ink); overflow: hidden; }
+  .cell img { width: 100%; height: 100%; object-fit: cover; display: block; animation: land .5s ease-out; }
+  .hide { position: absolute; top: 8px; right: 8px; border: none; background: var(--red); color: #fff; border-radius: 4px; font-size: 12px; padding: 3px 8px; cursor: pointer; display: none; }
+  body.host .hide { display: block; }
+  .board.hidden-board { opacity: .35; }
+  @keyframes arrive { from { transform: translateY(24px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes land { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<aside>
+  <div>
+    <div class="logo">絵コンテ</div>
+    <div class="sub">STORYBOARD STUDIO</div>
+  </div>
+  <div class="cta">Scan. Type one line.<br>Get an anime storyboard.</div>
+  <div class="qr"><img src="/storyboard/qr.svg" alt="QR code for the storyboard page"></div>
+  <div class="url" id="url"></div>
+  <div class="stats">
+    <div><b id="n-boards">0</b>storyboards</div>
+    <div><b id="n-panels">0</b>panels drawn</div>
+  </div>
+  <div class="badges">Planned by <b>Qwen 3.6</b> via Ollama · Drawn by <b>Anima Turbo</b> in ComfyUI<br>Running on <b>Runpod</b> GPUs</div>
+</aside>
+<main id="wall"><div class="empty">Waiting for the first storyboard…</div></main>
+
+<script>
+const MAX_BOARDS = 6;  // three full rows on a 1080p projector
+const $ = s => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const cards = new Map();  // board id -> card element
+let cfg;
+
+async function getJSON(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function card(b) {
+  let c = cards.get(b.id);
+  if (!c) {
+    c = el("div", "board");
+    const top = el("div", "top");
+    top.append(el("h3", null, b.title), el("span", "pace", b.pacing.toUpperCase()));
+    const hide = el("button", "hide", "hide");
+    hide.onclick = async () => {
+      const on = !c.classList.contains("hidden-board");
+      await fetch("/storyboard/hide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ board_id: b.id, hidden: on }) });
+      c.classList.toggle("hidden-board", on);
+    };
+    c.append(top, el("div", "premise", `“${b.premise}”`), el("div", "strip"), hide);
+    cards.set(b.id, c);
+  }
+  const strip = c.querySelector(".strip");
+  while (strip.children.length < b.panels.length) strip.append(el("div", "cell"));
+  b.panels.forEach((path, i) => {
+    const cell = strip.children[i];
+    if (path && !cell.firstChild) { const img = el("img"); img.src = b.base + path; cell.append(img); }
+  });
+  return c;
+}
+
+async function tick() {
+  const [hidden, ...feeds] = await Promise.all([
+    getJSON("/storyboard/hidden").catch(() => []),
+    ...cfg.backends.map(base => getJSON(`${base}/storyboard/feed`).then(list => list.map(b => ({ ...b, base }))).catch(() => [])),
+  ]);
+  const hiddenSet = new Set(hidden);
+  // The host sees hidden boards dimmed so they can be restored; the audience never sees them.
+  const all = feeds.flat().filter(b => cfg.host || !hiddenSet.has(b.id)).sort((a, b) => b.created - a.created);
+  $("#n-boards").textContent = all.length;
+  $("#n-panels").textContent = all.reduce((n, b) => n + b.panels.filter(Boolean).length, 0);
+  const wall = $("#wall");
+  if (!all.length) return;
+  const shown = all.slice(0, MAX_BOARDS).map(b => {
+    const c = card(b);
+    c.classList.toggle("hidden-board", hiddenSet.has(b.id));
+    return c;
+  });
+  // Re-order without rebuilding, so finished panels don't flicker.
+  if (shown.some((c, i) => wall.children[i] !== c) || wall.children.length !== shown.length) wall.replaceChildren(...shown);
+}
+
+(async () => {
+  cfg = await getJSON("/storyboard/config");
+  document.body.classList.toggle("host", cfg.host);
+  $("#url").textContent = `${location.host}/storyboard`;
+  const loop = async () => { try { await tick(); } catch (e) { console.error(e); } setTimeout(loop, 2500); };
+  loop();
+})();
+</script>
+</body>
+</html>
