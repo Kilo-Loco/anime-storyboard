@@ -2,6 +2,10 @@
 
 Type one line, get a timed anime storyboard. A local LLM (Qwen 3.6 via Ollama) plans the cuts and pacing; [Anima Turbo](https://huggingface.co/circlestone-labs/Anima) draws every panel in ComfyUI. Everything open-weight, one GPU.
 
+<img src="assets/repo-qr.svg" width="200" alt="QR code linking to github.com/Kilo-Loco/anime-storyboard">
+
+Scan to open this repo.
+
 ## Try it
 
 You need a [Runpod](https://runpod.io) account with an SSH key added (Settings → SSH Public Keys).
